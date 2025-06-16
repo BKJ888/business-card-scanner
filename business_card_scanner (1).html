@@ -1,0 +1,955 @@
+                <input type="file" id="fileInput" class="file-input" accept="image/*"><!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>名片收集系統</title>
+    
+    <!-- PWA 設定 -->
+    <meta name="theme-color" content="#4facfe">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="名片收集">
+    
+    <!-- PWA 設定 -->
+    <meta name="theme-color" content="#4facfe">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="名片收集">
+    <link rel="manifest" href="data:application/json;base64,eyJuYW1lIjoi5ZCN54mH5pS26ZuG57O757WxIiwic2hvcnRfbmFtZSI6IuWQjeeBh+aUtumbhiIsImRlc2NyaXB0aW9uIjoi5pm66IO95ZCN54mH5pS26ZuG6IiH566h55CG57O757WxIiwic3RhcnRfdXJsIjoiLyIsImRpc3BsYXkiOiJzdGFuZGFsb25lIiwiYmFja2dyb3VuZF9jb2xvciI6IiNmZmZmZmYiLCJ0aGVtZV9jb2xvciI6IiM0ZmFjZmUiLCJvcmllbnRhdGlvbiI6InBvcnRyYWl0In0=">
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tesseract.js/4.1.1/tesseract.min.js"></script></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Microsoft JhengHei', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 10px;
+            padding-bottom: 80px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            padding: 20px;
+            text-align: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header h1 {
+            font-size: 1.8em;
+            margin-bottom: 5px;
+            font-weight: 600;
+        }
+
+        .header p {
+            opacity: 0.9;
+            font-size: 0.9em;
+        }
+
+        .main-content {
+            padding: 20px;
+        }
+
+        .stats {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 15px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .stats h3 {
+            font-size: 1.8em;
+            margin-bottom: 5px;
+        }
+
+        .camera-section {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        .camera-container {
+            position: relative;
+            max-width: 100%;
+            margin: 0 auto;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            background: #f8f9fa;
+        }
+
+        #camera {
+            width: 100%;
+            height: auto;
+            display: block;
+            max-height: 300px;
+            object-fit: cover;
+        }
+
+        .camera-overlay {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 80%;
+            height: 60%;
+            border: 3px dashed rgba(255,255,255,0.8);
+            border-radius: 10px;
+            pointer-events: none;
+        }
+
+        .camera-placeholder {
+            padding: 60px 20px;
+            text-align: center;
+            color: #666;
+            background: #f8f9fa;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 15px;
+        }
+
+        .btn {
+            border: none;
+            padding: 12px 24px;
+            font-size: 1em;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 500;
+            min-width: 120px;
+            touch-action: manipulation;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #ff6b6b, #ee5a52);
+            color: white;
+            box-shadow: 0 4px 15px rgba(238, 90, 82, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(238, 90, 82, 0.4);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #4facfe, #00f2fe);
+            color: white;
+            box-shadow: 0 4px 15px rgba(79, 172, 254, 0.3);
+        }
+
+        .btn-secondary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(79, 172, 254, 0.4);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #28a745, #20c997);
+            color: white;
+            box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);
+        }
+
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+            padding: 6px 12px;
+            font-size: 0.8em;
+            min-width: auto;
+        }
+
+        .upload-section {
+            text-align: center;
+            margin: 20px 0;
+            padding: 20px;
+            border: 2px dashed #ddd;
+            border-radius: 15px;
+            background: #f8f9fa;
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        .processing {
+            text-align: center;
+            padding: 20px;
+            background: linear-gradient(135deg, #ffeaa7, #fab1a0);
+            border-radius: 15px;
+            margin: 20px 0;
+            display: none;
+            color: #2d3436;
+        }
+
+        .contact-form {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 15px;
+            margin-top: 20px;
+            display: none;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #333;
+            font-size: 0.9em;
+        }
+
+        .form-group input, .form-group textarea {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            font-size: 1em;
+            transition: border-color 0.3s ease;
+            font-family: inherit;
+        }
+
+        .form-group input:focus, .form-group textarea:focus {
+            outline: none;
+            border-color: #4facfe;
+        }
+
+        .contacts-list {
+            margin-top: 30px;
+        }
+
+        .contact-card {
+            background: white;
+            border: 1px solid #e9ecef;
+            border-radius: 15px;
+            padding: 15px;
+            margin-bottom: 15px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.05);
+            transition: transform 0.3s ease;
+            position: relative;
+        }
+
+        .contact-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(0,0,0,0.1);
+        }
+
+        .contact-name {
+            font-size: 1.2em;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 8px;
+            padding-right: 60px;
+        }
+
+        .contact-info {
+            color: #666;
+            line-height: 1.5;
+            font-size: 0.9em;
+        }
+
+        .contact-actions {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            display: flex;
+            gap: 5px;
+        }
+
+        .export-section {
+            margin: 20px 0;
+            text-align: center;
+            padding: 20px;
+            background: #e8f5e8;
+            border-radius: 15px;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #666;
+        }
+
+        .empty-state h3 {
+            margin-bottom: 10px;
+            color: #333;
+        }
+
+        /* 手機優化 */
+        @media (max-width: 768px) {
+            body {
+                padding: 5px;
+                padding-bottom: 60px;
+            }
+            
+            .main-content {
+                padding: 15px;
+            }
+            
+            .header {
+                padding: 15px;
+            }
+            
+            .header h1 {
+                font-size: 1.5em;
+            }
+            
+            .action-buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .btn {
+                width: 100%;
+                max-width: 280px;
+            }
+            
+            .contact-name {
+                font-size: 1.1em;
+                padding-right: 50px;
+            }
+            
+            .contact-actions {
+                flex-direction: column;
+                gap: 3px;
+            }
+        }
+
+        /* 載入動畫 */
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* 成功提示 */
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #28a745;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 25px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            z-index: 1000;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📇 名片收集系統</h1>
+            <p>智慧識別 • 快速收集 • 永久保存</p>
+        </div>
+
+        <div class="main-content">
+            <div class="stats">
+                <h3 id="contactCount">0</h3>
+                <p>已收集的名片</p>
+            </div>
+
+            <div class="camera-section">
+                <div class="camera-container">
+                    <video id="camera" autoplay playsinline style="display: none;"></video>
+                    <div id="cameraPlaceholder" class="camera-placeholder">
+                        <h3>📷 準備拍攝名片</h3>
+                        <p>點擊下方按鈕開啟相機</p>
+                    </div>
+                    <div class="camera-overlay" style="display: none;"></div>
+                </div>
+                <div class="action-buttons">
+                    <button id="startCamera" class="btn btn-secondary">📷 開啟相機</button>
+                    <button id="captureBtn" class="btn btn-primary" style="display: none;">
+                        <span id="captureText">📸 拍攝名片</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="upload-section">
+                <h3 style="margin-bottom: 10px;">📁 上傳名片圖片</h3>
+                <p style="color: #666; margin-bottom: 15px; font-size: 0.9em;">支援 JPG、PNG 格式</p>
+                <input type="file" id="fileInput" class="file-input" accept="image/*">
+                <div class="action-buttons">
+                    <button onclick="document.getElementById('fileInput').click()" class="btn btn-secondary">
+                        選擇圖片
+                    </button>
+                    <button onclick="manualInput()" class="btn btn-success">
+                        ✏️ 直接手動輸入
+                    </button>
+                </div>
+                <p style="color: #999; margin-top: 10px; font-size: 0.8em;">
+                    💡 建議：手動輸入通常比 AI 辨識更快更準確
+                </p>
+            </div>
+
+            <div id="processing" class="processing">
+                <div class="loading"></div>
+                <h3 style="margin: 10px 0;">🔄 正在識別名片內容</h3>
+                <p>請稍候，AI 正在分析圖片中的文字...</p>
+            </div>
+
+            <div id="contactForm" class="contact-form">
+                <h3 style="margin-bottom: 20px;">✏️ 編輯聯絡人資訊</h3>
+                <div class="form-group">
+                    <label for="name">姓名 *</label>
+                    <input type="text" id="name" placeholder="請輸入姓名">
+                </div>
+                <div class="form-group">
+                    <label for="company">公司</label>
+                    <input type="text" id="company" placeholder="請輸入公司名稱">
+                </div>
+                <div class="form-group">
+                    <label for="title">職稱</label>
+                    <input type="text" id="title" placeholder="請輸入職稱">
+                </div>
+                <div class="form-group">
+                    <label for="phone">電話</label>
+                    <input type="tel" id="phone" placeholder="請輸入電話號碼">
+                </div>
+                <div class="form-group">
+                    <label for="email">Email</label>
+                    <input type="email" id="email" placeholder="請輸入Email地址">
+                </div>
+                <div class="form-group">
+                    <label for="address">地址</label>
+                    <textarea id="address" placeholder="請輸入地址" rows="2"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="notes">備註</label>
+                    <textarea id="notes" placeholder="其他資訊或原始識別文字" rows="2"></textarea>
+                </div>
+                <div class="action-buttons">
+                    <button onclick="saveContact()" class="btn btn-success">💾 儲存聯絡人</button>
+                    <button onclick="cancelEdit()" class="btn" style="background: #6c757d; color: white;">取消</button>
+                </div>
+            </div>
+
+            <div class="export-section">
+                <h3 style="margin-bottom: 15px;">📤 匯出資料</h3>
+                <div class="action-buttons">
+                    <button onclick="exportCSV()" class="btn btn-success">下載 CSV 檔案</button>
+                    <button onclick="clearAllData()" class="btn" style="background: #dc3545; color: white;">清空所有資料</button>
+                </div>
+            </div>
+
+            <div class="contacts-list">
+                <h3 style="margin-bottom: 20px;">📋 聯絡人清單</h3>
+                <div id="contactsList"></div>
+            </div>
+        </div>
+    </div>
+
+    <canvas id="canvas" style="display: none;"></canvas>
+    <div id="toast" class="toast"></div>
+
+    <script>
+        let camera;
+        let contacts = [];
+        let stream = null;
+
+        // 載入儲存的聯絡人
+        function loadContacts() {
+            try {
+                const saved = JSON.parse(localStorage.getItem('businessCards') || '[]');
+                contacts = saved;
+            } catch (e) {
+                contacts = [];
+            }
+            updateContactsList();
+            updateStats();
+        }
+
+        // 儲存聯絡人到 localStorage
+        function saveContacts() {
+            try {
+                localStorage.setItem('businessCards', JSON.stringify(contacts));
+            } catch (e) {
+                showToast('儲存失敗：儲存空間不足', 'error');
+            }
+        }
+
+        // 顯示提示訊息
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.style.background = type === 'error' ? '#dc3545' : '#28a745';
+            toast.style.display = 'block';
+            setTimeout(() => {
+                toast.style.display = 'none';
+            }, 3000);
+        }
+
+        // 初始化相機
+        async function initCamera() {
+            try {
+                // 停止現有的串流
+                if (stream) {
+                    stream.getTracks().forEach(track => track.stop());
+                }
+                
+                stream = await navigator.mediaDevices.getUserMedia({ 
+                    video: { 
+                        facingMode: 'environment',
+                        width: { ideal: 1280 },
+                        height: { ideal: 720 }
+                    } 
+                });
+                
+                camera = document.getElementById('camera');
+                camera.srcObject = stream;
+                camera.style.display = 'block';
+                
+                document.getElementById('cameraPlaceholder').style.display = 'none';
+                document.querySelector('.camera-overlay').style.display = 'block';
+                document.getElementById('startCamera').style.display = 'none';
+                document.getElementById('captureBtn').style.display = 'inline-block';
+                
+                showToast('相機已開啟，對準名片拍攝');
+            } catch (err) {
+                console.error('無法存取相機:', err);
+                showToast('無法存取相機，請檢查權限設定', 'error');
+                document.getElementById('startCamera').textContent = '重新開啟相機';
+            }
+        }
+
+        // 拍攝照片
+        function capturePhoto() {
+            if (!camera || !camera.srcObject) {
+                showToast('請先開啟相機', 'error');
+                return;
+            }
+
+            const canvas = document.getElementById('canvas');
+            const video = document.getElementById('camera');
+            
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(video, 0, 0);
+            
+            // 停止攝影機
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
+                stream = null;
+            }
+            
+            canvas.toBlob(processImage, 'image/jpeg', 0.8);
+            
+            // 重設相機介面
+            resetCameraInterface();
+        }
+
+        // 重設相機介面
+        function resetCameraInterface() {
+            document.getElementById('camera').style.display = 'none';
+            document.getElementById('cameraPlaceholder').style.display = 'block';
+            document.querySelector('.camera-overlay').style.display = 'none';
+            document.getElementById('startCamera').style.display = 'inline-block';
+            document.getElementById('captureBtn').style.display = 'none';
+        }
+
+        // 處理圖片
+        async function processImage(imageBlob) {
+            document.getElementById('processing').style.display = 'block';
+            
+            // 滾動到處理區域
+            document.getElementById('processing').scrollIntoView({ behavior: 'smooth' });
+            
+            try {
+                // 使用 Tesseract.js 進行 OCR
+                const { data: { text } } = await Tesseract.recognize(imageBlob, 'chi_tra+eng', {
+                    logger: m => {
+                        if (m.status === 'recognizing text') {
+                            const progress = Math.round(m.progress * 100);
+                            document.querySelector('#processing p').textContent = 
+                                `AI 正在識別中... ${progress}%`;
+                        }
+                    }
+                });
+                
+                console.log('識別到的文字:', text);
+                
+                if (text.trim()) {
+                    parseBusinessCard(text);
+                    showToast('名片識別完成！請檢查並修正資料');
+                } else {
+                    showToast('未能識別到文字，建議使用手動輸入', 'error');
+                    manualInput(); // 自動切換到手動輸入
+                }
+                
+            } catch (error) {
+                console.error('OCR 錯誤:', error);
+                showToast('圖片識別失敗，已為您開啟手動輸入', 'error');
+                manualInput(); // 自動切換到手動輸入
+            } finally {
+                document.getElementById('processing').style.display = 'none';
+            }
+        }
+
+        // 解析名片文字
+        function parseBusinessCard(text) {
+            const lines = text.split('\n').filter(line => line.trim() !== '');
+            
+            let name = '';
+            let company = '';
+            let title = '';
+            let phone = '';
+            let email = '';
+            let address = '';
+            
+            lines.forEach(line => {
+                line = line.trim();
+                
+                // 電話號碼識別（更精確的規則）
+                if (line.match(/[\d\s\-\(\)\+]{8,}/) && line.match(/\d{4,}/)) {
+                    if (!phone) phone = line.replace(/[^\d\-\(\)\+\s]/g, '');
+                }
+                // Email 識別
+                else if (line.includes('@') && line.includes('.')) {
+                    if (!email) email = line.toLowerCase();
+                }
+                // 手機號碼識別
+                else if (line.match(/09\d{8}/)) {
+                    if (!phone) phone = line;
+                }
+                // 公司名稱識別
+                else if (line.match(/(公司|有限|股份|企業|集團|Co\.|Ltd\.|Inc\.|Corp\.)/i)) {
+                    if (!company) company = line;
+                }
+                // 職稱識別
+                else if (line.match(/(經理|主任|總監|執行長|董事|副總|協理|課長|部長|CEO|CTO|CFO|Manager)/i)) {
+                    if (!title) title = line;
+                }
+                // 姓名識別（中文2-4字或英文名字）
+                else if (!name && (line.match(/^[\u4e00-\u9fa5]{2,4}$/) || line.match(/^[A-Za-z\s]{2,20}$/))) {
+                    name = line;
+                }
+                // 地址識別（包含地址關鍵字或較長的文字）
+                else if (line.match(/(市|區|路|街|號|樓|Address|Rd\.|St\.)/i) || line.length > 15) {
+                    if (!address) address = line;
+                }
+            });
+
+            // 填入表單
+            document.getElementById('name').value = name;
+            document.getElementById('company').value = company;
+            document.getElementById('title').value = title;
+            document.getElementById('phone').value = phone;
+            document.getElementById('email').value = email;
+            document.getElementById('address').value = address;
+            document.getElementById('notes').value = text; // 原始文字
+            
+            // 顯示編輯表單
+            document.getElementById('contactForm').style.display = 'block';
+            document.getElementById('contactForm').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // 儲存聯絡人
+        function saveContact() {
+            const name = document.getElementById('name').value.trim();
+            
+            if (!name) {
+                showToast('請至少輸入姓名', 'error');
+                return;
+            }
+            
+            const contact = {
+                id: Date.now(),
+                name: name,
+                company: document.getElementById('company').value,
+                title: document.getElementById('title').value,
+                phone: document.getElementById('phone').value,
+                email: document.getElementById('email').value,
+                address: document.getElementById('address').value,
+                notes: document.getElementById('notes').value,
+                createdAt: new Date().toLocaleString('zh-TW')
+            };
+            
+            contacts.push(contact);
+            saveContacts();
+            updateContactsList();
+            updateStats();
+            
+            // 清空表單並隱藏
+            clearForm();
+            
+            showToast(`${name} 已成功加入聯絡人清單！`);
+        }
+
+        // 取消編輯
+        function cancelEdit() {
+            clearForm();
+        }
+
+        // 清空表單
+        function clearForm() {
+            document.getElementById('contactForm').reset();
+            document.getElementById('contactForm').style.display = 'none';
+        }
+
+        // 更新聯絡人清單
+        function updateContactsList() {
+            const listContainer = document.getElementById('contactsList');
+            
+            if (contacts.length === 0) {
+                listContainer.innerHTML = `
+                    <div class="empty-state">
+                        <h3>📝 還沒有收集任何名片</h3>
+                        <p>拍攝或上傳第一張名片開始使用吧！</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            // 按建立時間排序（最新的在前）
+            const sortedContacts = [...contacts].sort((a, b) => b.id - a.id);
+            
+            listContainer.innerHTML = sortedContacts.map(contact => `
+                <div class="contact-card">
+                    <div class="contact-actions">
+                        <button class="btn btn-danger" onclick="deleteContact(${contact.id})">刪除</button>
+                    </div>
+                    <div class="contact-name">${contact.name || '未知姓名'}</div>
+                    <div class="contact-info">
+                        ${contact.company ? `<strong>🏢 公司：</strong>${contact.company}<br>` : ''}
+                        ${contact.title ? `<strong>💼 職稱：</strong>${contact.title}<br>` : ''}
+                        ${contact.phone ? `<strong>📞 電話：</strong><a href="tel:${contact.phone}">${contact.phone}</a><br>` : ''}
+                        ${contact.email ? `<strong>📧 Email：</strong><a href="mailto:${contact.email}">${contact.email}</a><br>` : ''}
+                        ${contact.address ? `<strong>📍 地址：</strong>${contact.address}<br>` : ''}
+                        ${contact.notes ? `<strong>📝 備註：</strong>${contact.notes.substring(0, 50)}${contact.notes.length > 50 ? '...' : ''}<br>` : ''}
+                        <small style="color: #999;">📅 ${contact.createdAt}</small>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // 刪除聯絡人
+        function deleteContact(id) {
+            if (confirm('確定要刪除這個聯絡人嗎？')) {
+                contacts = contacts.filter(contact => contact.id !== id);
+                saveContacts();
+                updateContactsList();
+                updateStats();
+                showToast('聯絡人已刪除');
+            }
+        }
+
+        // 更新統計
+        function updateStats() {
+            document.getElementById('contactCount').textContent = contacts.length;
+        }
+
+        // 匯出 CSV
+        function exportCSV() {
+            if (contacts.length === 0) {
+                showToast('沒有資料可以匯出', 'error');
+                return;
+            }
+            
+            const headers = ['姓名', '公司', '職稱', '電話', 'Email', '地址', '備註', '建立時間'];
+            const csvContent = [
+                headers.join(','),
+                ...contacts.map(contact => [
+                    contact.name || '',
+                    contact.company || '',
+                    contact.title || '',
+                    contact.phone || '',
+                    contact.email || '',
+                    contact.address || '',
+                    contact.notes ? contact.notes.replace(/\n/g, ' ') : '',
+                    contact.createdAt || ''
+                ].map(field => `"${field}"`).join(','))
+            ].join('\n');
+            
+            const blob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `名片清單_${new Date().toISOString().split('T')[0]}.csv`;
+            link.click();
+            
+            showToast('CSV 檔案已下載完成！');
+        }
+
+        // 清空所有資料
+        function clearAllData() {
+            if (contacts.length === 0) {
+                showToast('沒有資料需要清空', 'error');
+                return;
+            }
+            
+            if (confirm(`確定要清空所有 ${contacts.length} 筆聯絡人資料嗎？此操作無法復原！`)) {
+                contacts = [];
+                saveContacts();
+                updateContactsList();
+                updateStats();
+                showToast('所有資料已清空');
+            }
+        }
+
+        // 事件監聽器
+        document.getElementById('captureBtn').addEventListener('click', capturePhoto);
+        document.getElementById('startCamera').addEventListener('click', initCamera);
+        document.getElementById('fileInput').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                processImage(file);
+            }
+        });
+
+        // 確保手動輸入按鈕可以正常工作
+        document.addEventListener('click', function(e) {
+            if (e.target && e.target.textContent && e.target.textContent.includes('直接手動輸入')) {
+                e.preventDefault();
+                manualInput();
+            }
+        });
+
+        // 防止誤觸刷新
+        window.addEventListener('beforeunload', function(e) {
+            if (document.getElementById('contactForm').style.display !== 'none') {
+                e.preventDefault();
+                e.returnValue = '';
+            }
+        });
+
+        // 手動輸入聯絡人
+        function manualInput() {
+            try {
+                console.log('手動輸入按鈕被點擊');
+                
+                // 清空表單
+                const form = document.getElementById('contactForm');
+                if (form) {
+                    form.reset();
+                    console.log('表單已重置');
+                }
+                
+                // 顯示編輯表單
+                const contactForm = document.getElementById('contactForm');
+                if (contactForm) {
+                    contactForm.style.display = 'block';
+                    console.log('表單已顯示');
+                    
+                    // 滾動到表單
+                    contactForm.scrollIntoView({ behavior: 'smooth' });
+                    
+                    // 聚焦到姓名欄位
+                    setTimeout(() => {
+                        const nameInput = document.getElementById('name');
+                        if (nameInput) {
+                            nameInput.focus();
+                            console.log('已聚焦到姓名欄位');
+                        }
+                    }, 300);
+                    
+                    showToast('請輸入聯絡人資訊');
+                } else {
+                    console.error('找不到 contactForm 元素');
+                }
+            } catch (error) {
+                console.error('手動輸入錯誤:', error);
+                alert('手動輸入功能出錯，請重新整理頁面');
+            }
+        }
+        function addSampleContact() {
+            // 檢查是否已有莊旭芹的資料
+            const existingContact = contacts.find(contact => 
+                contact.name === '莊旭芹' && contact.email === 'c1222@ccsd.org.tw'
+            );
+            
+            if (!existingContact) {
+                const sampleContact = {
+                    id: Date.now(),
+                    name: '莊旭芹',
+                    company: '財團法人中衛發展中心',
+                    title: '經理',
+                    phone: '04-23587591 #1222 / 0928-730892',
+                    email: 'c1222@ccsd.org.tw',
+                    address: '407臺中市西屯區台灣大道四段925號20樓之2',
+                    notes: '傳真：04-23589616 | 統編：01107297',
+                    createdAt: new Date().toLocaleString('zh-TW')
+                };
+                
+                contacts.push(sampleContact);
+                saveContacts();
+                updateContactsList();
+                updateStats();
+                showToast('已為您添加示範名片資料！');
+            }
+        }
+
+        // 檢查是否在 HTTPS 環境
+        function checkHTTPS() {
+            if (location.protocol !== 'https:' && location.hostname !== 'localhost') {
+                showToast('相機功能需要 HTTPS 環境，建議部署到 GitHub Pages 等平台', 'error');
+            }
+        }
+
+        // 檢查瀏覽器支援
+        function checkBrowserSupport() {
+            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                showToast('您的瀏覽器不支援相機功能，建議使用 Chrome 或 Safari', 'error');
+                return false;
+            }
+            return true;
+        }
+
+        // 初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            loadContacts();
+            checkHTTPS();
+            checkBrowserSupport();
+            
+            // 確保添加示範資料（無論是否有現有聯絡人）
+            setTimeout(() => {
+                addSampleContact();
+            }, 500);
+            
+            showToast('名片收集系統已就緒！可以部署到網路上使用');
+        });
+
+        // 鍵盤快捷鍵
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                cancelEdit();
+            }
+        });
+    </script>
+</body>
+</html>
